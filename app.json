@@ -1,7 +1,7 @@
 {
 	"name": "filestoringtelegrambot",
 	"description": "file storing bot by anjbots",
-	"repository": "https://github.com/Amalrajanj/filestoringtelegrambot",
+	"repository": "https://github.com/Amalrajanj/filestoringbot",
     "logo": "https://node-js-sample.herokuapp.com/node.png",
 	"keywords": ["telegram","filestoring","bot","nodejs"],
 	"env": {
