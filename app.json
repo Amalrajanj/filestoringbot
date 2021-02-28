@@ -14,7 +14,7 @@
             "value":"domain"
 		},
         "DB_URL":{
-            "description": "get mongodb database url from https://www.mongodb.com/cloud/atlas ",
+            "description": "get mongodb database url from https://www.mongodb.com/cloud/atlas with db name = mediaFile and collection name = fileBackup",
             "value":"db"
         },
         "ADMIN":{
@@ -22,7 +22,7 @@
             "value":"admin_id"
         },
         "CHANNEL_USERNAME":{
-            "description": "channel @channelusername - dont forget @ symbol",
+            "description": "channel username without @",
             "value":"channel"
         }
 
