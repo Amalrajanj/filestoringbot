@@ -1,0 +1,39 @@
+{
+	"name": "filestoringtelegrambot",
+	"description": "file storing bot by anjbots",
+	"repository": "https://github.com/Amalrajanj/filestoringtelegrambot",
+    "logo": "https://node-js-sample.herokuapp.com/node.png",
+	"keywords": ["telegram","filestoring","bot","nodejs"],
+	"env": {
+		"TOKEN": {
+			"description": "bot token provided by @botfather",
+            "value":"token"
+		},
+        "DOMAIN":{
+            "description": "enter your app name",
+            "value":"domain"
+		},
+        "DB_URL":{
+            "description": "get mongodb database url from https://www.mongodb.com/cloud/atlas ",
+            "value":"db"
+        },
+        "ADMIN":{
+            "description": "enter your id",
+            "value":"admin_id"
+        },
+        "CHANNEL_USERNAME":{
+            "description": "channel @channelusername - dont forget @ symbol",
+            "value":"channel"
+        }
+
+
+
+        
+		
+	},
+	"buildpacks": [
+		{
+			"url": "heroku/nodejs"
+		}
+	]
+}
