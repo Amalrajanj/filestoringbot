@@ -194,7 +194,7 @@ bot.command('help',(ctx)=>{
                 inline_keyboard:[
                     [{text:"▶ Next",callback_data:'helpNext'}],
                     [{text:"📊Statitics",callback_data:"helpStatitics"}],
-                    [{text:'🔰Admin helper',callback_data:'adminHelp'}]
+                    [{text:'🔰Admin helper',url:'https://telegra.ph/Filestoringbot-03-01'}]
                 ]
             }
     
