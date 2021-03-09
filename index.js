@@ -356,13 +356,12 @@ bot.action('adminHelpMenu',(ctx)=>{
     })
 })
 
-// domain = `${process.env.DOMAIN}.herokuapp.com`
-// bot.launch({
-//     webhook:{
-//        domain:domain,
-//         port:Number(process.env.PORT)
+domain = `${process.env.DOMAIN}.herokuapp.com`
+bot.launch({
+    webhook:{
+       domain:domain,
+        port:Number(process.env.PORT)
 
-//     }
-// })
+    }
+})
 
-bot.launch()
