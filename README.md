@@ -18,4 +18,4 @@ required details
 
 <code>DB_URL</code> - create an account on https://www.mongodb.com/cloud/atlas , database name - mediaFile ,collection name - fileBackup.Click connect and choose 'connect your application'.Copy the link and replace "< password >" with password of user having acess to db and replace "myFirstDatabase" to "mediaFile"
   
-  
+  "This bot is only for storing and sending files and not for promoting violation of copyright"

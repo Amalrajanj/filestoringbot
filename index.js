@@ -64,17 +64,24 @@ bot.command('send',async(ctx)=>{
          for(i=0;i<n;i++){
              userId.push(res[i].userId)
          }
-         console.log(userId);
+         //broadcasting message and getting number of sucesfull broadcast
+         failedCount = []
+         async function broadcast(text){
+            for(users of userId){
+                try{
+                    await bot.telegram.sendMessage(users,String(text))
+                }catch(error){
+                    failedCount.push(users)
+                }
+            }
+            ctx.reply(`📊Total users started bot: <b>${n}</b>\n🛑failed users -<b>${failedCount.length}</b>\n🎉Active users:<b>${n-failedCount.length}</b>`,{parse_mode:'HTML'})
+         }
 
          if(ctx.from.id ==process.env.ADMIN){
-            for(i=0;i<userId.length;i++){
-                ctx.reply(`${text}`,{chat_id:userId[i]})
-               }
+            broadcast(text)
          }else{
              ctx.reply('you dont have the permission')
          }
-
-         ctx.reply(n)
             
      })
 })
@@ -216,13 +223,55 @@ bot.command('help',(ctx)=>{
 //checking search query and taking file_id from database and sending document with file_id
 
 bot.on('message',async(ctx)=>{
-    inputQuery = ctx.message.text
+    inputQuery = ctx.message.text 
+    let searchData = {
+        inputQuery:inputQuery,
+        from:ctx.from.id
+    }
+
+    //Creating function to notify on fullfilling request
+    let fullFill=(searchData)=>{
+        bot.telegram.sendMessage(process.env.LOG_GROUP,`❌Failed request: <code>${inputQuery}</code>\nFirst Name:${ctx.from.first_name}\nuserID:<code>${ctx.from.id}</code>`,{
+            parse_mode:'HTML',
+            reply_markup:{
+                inline_keyboard:[
+                    [{text:"✅Request fullfilled",callback_data:'REQUESTFULLFILLED'}]
+                ]
+            }
+        })
+    }
     query = inputQuery.toLowerCase()
     let file = await adminHelper.getFile(query).then((res)=>{
-        let n = res.file_id.length
-        for(i=0;i<n;i++){
-            ctx.replyWithDocument(res.file_id[i])
+        if(res){
+            let n = res.file_id.length
+        if(n>0){
+            for(i=0;i<n;i++){
+                ctx.replyWithDocument(res.file_id[i])
+            }
+        }else{
+            //error message if searched data not available and adding it to log group or channel
+            ctx.reply(`❌Looks like the requested content is not available right now.<b>I have notified admins</b>`,{parse_mode:'HTML'})
+            if(process.env.LOG_GROUP){
+                fullFill(searchData)
+            }
         }
+        }else{
+            ctx.reply(`❌Looks like the requested content is not available right now.<b>I have notified admins</b>`,{parse_mode:'HTML'})
+            if(process.env.LOG_GROUP){
+                fullFill(searchData)
+            }
+        }
+    })
+
+    //defining callback to send notification on fullfilling user request
+    bot.action('REQUESTFULLFILLED',(ctx)=>{
+        fullfilled=(searchData)=>{
+            bot.telegram.sendMessage(searchData.from,`❤We always care user interests and we have noticed you were searching for <b>${searchData.inputQuery}</b>.\n\nWe have succesfully uploaded your request try searching  <code>${searchData.inputQuery}</code>`,{
+                parse_mode:'HTML'
+            })
+        }
+        fullfilled(searchData)
+        
     })
 
 })
@@ -307,11 +356,13 @@ bot.action('adminHelpMenu',(ctx)=>{
     })
 })
 
-domain = `${process.env.DOMAIN}.herokuapp.com`
-bot.launch({
-    webhook:{
-       domain:domain,
-        port:Number(process.env.PORT)
+// domain = `${process.env.DOMAIN}.herokuapp.com`
+// bot.launch({
+//     webhook:{
+//        domain:domain,
+//         port:Number(process.env.PORT)
 
-    }
-})
+//     }
+// })
+
+bot.launch()
