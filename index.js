@@ -356,6 +356,8 @@ bot.action('adminHelpMenu',(ctx)=>{
     })
 })
 
+//deploy to heroku 
+
 domain = `${process.env.DOMAIN}.herokuapp.com`
 bot.launch({
     webhook:{
