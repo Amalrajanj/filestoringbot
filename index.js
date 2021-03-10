@@ -220,25 +220,36 @@ bot.command('help',(ctx)=>{
     }
 })
 
+//getting list of requested content from database
+
+bot.command('req',async(ctx)=>{
+    let req = await adminHelper.getRequest().then((res)=>{
+        console.log(res);
+        let reqArray = [];
+            for(i=0;i<res.length;i++){
+                reqArray.push(res[i].inputQuery)
+            }
+            console.log(reqArray);
+            let requestedContent = reqArray.map((item,index)=>{
+                return `<code>${item}</code>`
+            })
+            let reqData = requestedContent.join('\n\n')
+            if(ctx.from.id == process.env.ADMIN){
+               ctx.reply(`${reqData}`,{parse_mode:'HTML'})
+            }
+        
+    })
+})
+
 //checking search query and taking file_id from database and sending document with file_id
 
 bot.on('message',async(ctx)=>{
     inputQuery = ctx.message.text 
-    let searchData = {
+    console.log(inputQuery);
+    let requestData = {
         inputQuery:inputQuery,
+        first_name:ctx.from.first_name,
         from:ctx.from.id
-    }
-
-    //Creating function to notify on fullfilling request
-    let fullFill=(searchData)=>{
-        bot.telegram.sendMessage(process.env.LOG_GROUP,`❌Failed request: <code>${inputQuery}</code>\nFirst Name:${ctx.from.first_name}\nuserID:<code>${ctx.from.id}</code>`,{
-            parse_mode:'HTML',
-            reply_markup:{
-                inline_keyboard:[
-                    [{text:"✅Request fullfilled",callback_data:'REQUESTFULLFILLED'}]
-                ]
-            }
-        })
     }
     query = inputQuery.toLowerCase()
     let file = await adminHelper.getFile(query).then((res)=>{
@@ -249,30 +260,18 @@ bot.on('message',async(ctx)=>{
                 ctx.replyWithDocument(res.file_id[i])
             }
         }else{
-            //error message if searched data not available and adding it to log group or channel
+            //error message if searched data not available saving search query to requested list
             ctx.reply(`❌Looks like the requested content is not available right now.<b>I have notified admins</b>`,{parse_mode:'HTML'})
-            if(process.env.LOG_GROUP){
-                fullFill(searchData)
-            }
+            adminHelper.saveRequest(requestData)
+           
         }
         }else{
             ctx.reply(`❌Looks like the requested content is not available right now.<b>I have notified admins</b>`,{parse_mode:'HTML'})
-            if(process.env.LOG_GROUP){
-                fullFill(searchData)
-            }
+            adminHelper.saveRequest(requestData)
         }
     })
 
-    //defining callback to send notification on fullfilling user request
-    bot.action('REQUESTFULLFILLED',(ctx)=>{
-        fullfilled=(searchData)=>{
-            bot.telegram.sendMessage(searchData.from,`❤We always care user interests and we have noticed you were searching for <b>${searchData.inputQuery}</b>.\n\nWe have succesfully uploaded your request try searching  <code>${searchData.inputQuery}</code>`,{
-                parse_mode:'HTML'
-            })
-        }
-        fullfilled(searchData)
-        
-    })
+   
 
 })
 
@@ -366,4 +365,5 @@ bot.launch({
 
     }
 })
+
 

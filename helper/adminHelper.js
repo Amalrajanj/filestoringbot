@@ -48,5 +48,19 @@ module.exports={
                 resolve(res)
             })
         })
+    },
+    //trying to save failed search as request
+    saveRequest:(requestData)=>{
+        db.get().collection(collection.REQUEST).createIndex({"inputQuery":1},{unique:true,dropDups:true})
+        db.get().collection(collection.REQUEST).insertOne(requestData).then((res)=>{
+            console.log(res);
+        })
+    },
+    getRequest:()=>{
+        return new Promise((resolve,reject)=>{
+            db.get().collection(collection.REQUEST).find({}).toArray().then((res)=>{
+                resolve(res)
+            })
+        })
     }
 }

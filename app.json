@@ -24,12 +24,8 @@
         "CHANNEL_USERNAME":{
             "description": "channel username without @",
             "value":"channel"
-        },
-        "GROUP_ID":{
-            "description":"enter your private group id in which only admin and bot is present",
-            "value":"groupID",
-            "required":false
         }
+        
 
 
 
