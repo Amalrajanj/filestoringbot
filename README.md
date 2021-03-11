@@ -23,4 +23,4 @@ required details
 
 
 
-we have added some tutorials on how to use <a href="t.me/filestoringbot">@Filestoringbot</a>
+we have added some tutorials on how to use t.me/filestoringbot
