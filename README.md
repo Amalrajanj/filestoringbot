@@ -1,5 +1,5 @@
 # filestoringbot
-stores files with file_id on telegram
+stores files with file_id on telegram ( "This bot is only for storing and sending files and not for promoting violation of copyright")
 
 <a href="https://heroku.com/deploy?template=https://github.com/Amalrajanj/filestoringbot">
   <img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy">
@@ -23,4 +23,4 @@ required details
 
 
 
-  "This bot is only for storing and sending files and not for promoting violation of copyright"
+we have added some tutorials on how to use <a href="t.me/filestoringbot">@Filestoringbot</a>

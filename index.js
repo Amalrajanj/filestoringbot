@@ -1,10 +1,11 @@
 require('dotenv').config()
-const {Telegraf} = require('telegraf')
+const {Telegraf, Markup} = require('telegraf')
 const bot = new Telegraf(process.env.TOKEN)
 
 const db = require('./config/connecton')
 const collection = require('./config/collection')
 const adminHelper = require('./helper/adminHelper')
+
 
 //DATABASE CONNECTION 
 db.connect((err)=>{
@@ -14,7 +15,7 @@ db.connect((err)=>{
 
 //start message 
 
-bot.start((ctx)=>{
+bot.start(async(ctx)=>{
     let userId = ctx.message.from.id
     let first_name = ctx.message.from.first_name
     ctx.reply('<b>Search for files uploaded by our team</b>',{
@@ -34,19 +35,64 @@ bot.start((ctx)=>{
 
     }
    adminHelper.saveUser(userData)
+
+   //checking if admin and providing admin keyboard to manage requests,help etc
+   if(ctx.from.id==process.env.ADMIN){
+    return await ctx.reply('admin buttons',Markup.keyboard(
+        [
+            ['🤖Bot statics','🔰Help'],
+            ['❕Requestes']
+        ]
+    ))
+   }
 })
 
-//getting number of users started bot
-
-bot.command('stats',async(ctx)=>{
+//defining admin buttons
+bot.hears('🤖Bot statics',async(ctx)=>{
     let users = await adminHelper.getUser().then((res)=>{
         if(ctx.from.id == process.env.ADMIN){
-            ctx.reply(`📊<b>Total users started bot</b>:${res.length}`,{parse_mode:'HTML'})
+            ctx.reply(`📊<b>Total users started bot</b>:${res.length}\n\n⚠<i>Real time data only available while broadcasting message</i>`,{parse_mode:'HTML'})
         }else{
             ctx.reply('not found read /help to know how to use the bot')
         }
     })
 })
+bot.hears('🔰Help',(ctx)=>{
+    if(ctx.from.id==process.env.ADMIN){
+        ctx.reply('we will soon add tutorials and documentations check @filestoringbot')
+    }
+})
+bot.hears('❕Requestes',async(ctx)=>{
+    if(ctx.from.id==process.env.ADMIN){
+        let req = await adminHelper.getRequest().then((res)=>{
+            console.log(res);
+            let reqArray = [];
+                for(i=0;i<res.length;i++){
+                    reqArray.push(res[i].inputQuery)
+                }
+                console.log(reqArray);
+                let requestedContent = reqArray.map((item,index)=>{
+                    return `<code>${item}</code>`
+                })
+                let reqData = requestedContent.join('\n\n')
+                if(ctx.from.id == process.env.ADMIN){
+                   ctx.reply(`${reqData}`,{
+                       parse_mode:'HTML',
+                       reply_markup:{
+                           inline_keyboard:[
+                               [{text:'Delete a request',callback_data:'REQONE'}],
+                               [{text:"Delete all Requests",callback_data:'REQALL'}]
+                           ]
+                       }
+                    })
+                }
+            
+        })
+    }
+})
+
+
+
 
 //broadcasting message
 
@@ -171,26 +217,6 @@ bot.command('list',async(ctx)=>{
     })
 })
 
-//delete a collection
-
-bot.command('del',async(ctx)=>{
-    inputMessage = ctx.message.text
-    let inputMsgArray = inputMessage.split(' ')
-    inputMsgArray.shift()
-    let searchQuery = inputMsgArray.join(' ')
-    let del = await adminHelper.deleteFile(searchQuery).then((res)=>{
-        if(res.deletedCount>0){
-            ctx.reply('<b>✅removed</b>',{
-                parse_mode:'HTML'
-            })
-        }else{
-            ctx.reply('<b>❌Nothing to delete</b>',{
-                parse_mode:'HTML'
-            })
-        }
-    })
-})
-
 //help 
 
 bot.command('help',(ctx)=>{
@@ -258,6 +284,7 @@ bot.on('message',async(ctx)=>{
         if(n>0){
             for(i=0;i<n;i++){
                 ctx.replyWithDocument(res.file_id[i])
+               
             }
         }else{
             //error message if searched data not available saving search query to requested list
@@ -270,6 +297,7 @@ bot.on('message',async(ctx)=>{
             adminHelper.saveRequest(requestData)
         }
     })
+    bot.telegram.sendMessage(process.env.LOG_GROUP,`<b>Keyword:</b><code>${query}</code>\n<b>First name:</b><code>${ctx.from.first_name}</code>\n<b>UserId:</b><code>${ctx.from.id}</code>`,{parse_mode:'HTML'})
 
    
 
@@ -354,16 +382,26 @@ bot.action('adminHelpMenu',(ctx)=>{
 
     })
 })
+bot.action('REQONE',(ctx)=>{
+    ctx.deleteMessage()
+    ctx.reply(`you have to remove individual requests for now we will soon make it easy for you,use \n\n<b>/req keyword</b>`,{parse_mode:'HTML'})
+})
+bot.action('REQALL',async(ctx)=>{
+    ctx.deleteMessage()
+    await db.get().collection(collection.REQUEST).drop()
+})
 
 //deploy to heroku 
 
 domain = `${process.env.DOMAIN}.herokuapp.com`
-bot.launch({
-    webhook:{
-       domain:domain,
-        port:Number(process.env.PORT)
+// bot.launch({
+//     webhook:{
+//        domain:domain,
+//         port:Number(process.env.PORT)
 
-    }
-})
+//     }
+// })
+
+bot.launch()
 
 
