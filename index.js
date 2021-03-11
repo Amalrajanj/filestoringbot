@@ -394,14 +394,12 @@ bot.action('REQALL',async(ctx)=>{
 //deploy to heroku 
 
 domain = `${process.env.DOMAIN}.herokuapp.com`
-// bot.launch({
-//     webhook:{
-//        domain:domain,
-//         port:Number(process.env.PORT)
+bot.launch({
+    webhook:{
+       domain:domain,
+        port:Number(process.env.PORT)
 
-//     }
-// })
-
-bot.launch()
+    }
+})
 
 
