@@ -5,7 +5,7 @@ module.exports={
     //saving user id for broadcasting
     saveUser:(userData)=>{
         db.get().collection(collection.USER_INFO).createIndex({"userId":1},{unique:true,dropDups: true})
-        db.get().collection(collection.USER_INFO).insertOne(userData).then((res)=>{
+        db.get().collection(collection.USER_INFO).insertOne(userData).catch((err)=>{
             
         })
     },

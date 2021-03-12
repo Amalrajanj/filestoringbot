@@ -24,6 +24,10 @@
         "CHANNEL_USERNAME":{
             "description": "channel username without @",
             "value":"channel"
+        },
+        "LOG_GROUP":{
+            "description": "private group id to get user search data",
+            "value":"group"
         }
         
 
