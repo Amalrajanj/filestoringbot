@@ -23,7 +23,7 @@ bot.start(async (ctx) => {
     let first_name = ctx.message.from.first_name
 
     //checking if user is a member of channel or not 
-   bot.telegram.getChatMember(`@${process.env.CHANNEL_USERNAME}`, ctx.from.id).then((res) => {
+   await bot.telegram.getChatMember(`@${process.env.CHANNEL_USERNAME}`, ctx.from.id).then((res) => {
         status = res.status
         console.log(status);
         if (status == 'left') {
@@ -38,6 +38,7 @@ bot.start(async (ctx) => {
                 }
             })
         } else {
+            joinedState = true
             ctx.reply('<b>Search for files uploaded by our team</b>', {
                 parse_mode: 'HTML',
                 reply_markup: {
@@ -198,6 +199,21 @@ bot.command('save', (ctx) => {
 
 })
 
+//delete content 
+
+bot.command('del',(ctx)=>{
+    msg = ctx.message.text
+    let msgArray = msg.split(' ')
+    msgArray.shift()
+    let query = msgArray.join(' ')
+    query.toLowerCase()
+    console.log(query);
+    if(ctx.from.id == process.env.ADMIN){
+        adminHelper.deleteFile(query)
+            ctx.reply('⭕removed')
+    }
+})
+
 //update content
 
 bot.command('update', async (ctx) => {
@@ -276,66 +292,48 @@ bot.command('help', (ctx) => {
 //getting list of requested content from database
 
 bot.command('req', async (ctx) => {
-    let req = await adminHelper.getRequest().then((res) => {
-        console.log(res);
-        let reqArray = [];
-        for (i = 0; i < res.length; i++) {
-            reqArray.push(res[i].inputQuery)
-        }
-        console.log(reqArray);
-        let requestedContent = reqArray.map((item, index) => {
-            return `<code>${item}</code>`
-        })
-        let reqData = requestedContent.join('\n\n')
-        if (ctx.from.id == process.env.ADMIN) {
-            ctx.reply(`${reqData}`, { parse_mode: 'HTML' })
-        }
-
-    })
+    msg = ctx.message.text
+    let msgArray = msg.split(' ')
+    msgArray.shift()
+    let query = msgArray.join(' ')
+    query.toLowerCase()
+    console.log(query);
+    if(ctx.from.id == process.env.ADMIN){
+        adminHelper.delRequest(query)
+            ctx.reply('⭕removed')
+    }
 })
 
 //checking search query and taking file_id from database and sending document with file_id
 
 bot.on('message', async (ctx) => {
     inputQuery = ctx.message.text
+    query = inputQuery.toLowerCase()
+    
     console.log(inputQuery);
     let requestData = {
-        inputQuery: inputQuery,
+        inputQuery: query,
         first_name: ctx.from.first_name,
         from: ctx.from.id
     }
-    query = inputQuery.toLowerCase()
-    await bot.telegram.getChatMember(`@${process.env.CHANNEL_USERNAME}`,ctx.from.id).then(async(res)=>{
-        if(res.status !=='left'){
-            let file =await adminHelper.getFile(query).then((res) => {
-                if (res) {
-                    let n = res.file_id.length
-                    if (n > 0) {
-                        for (i = 0; i < n; i++) {
-                            ctx.replyWithDocument(res.file_id[i])
-        
-                        }
-                    } else {
-                        //error message if searched data not available saving search query to requested list
-                        ctx.reply(`❌Looks like the requested content is not available right now.<b>I have notified admins</b>`, { parse_mode: 'HTML' })
-                        adminHelper.saveRequest(requestData)
-        
-                    }
-                } else {
-                    ctx.reply(`❌Looks like the requested content is not available right now.<b>I have notified admins</b>`, { parse_mode: 'HTML' })
-                    adminHelper.saveRequest(requestData)
+    
+    let file =await adminHelper.getFile(query).then((res) => {
+        if (res) {
+            let n = res.file_id.length
+            if (n > 0) {
+                for (i = 0; i < n; i++) {
+                    ctx.replyWithDocument(res.file_id[i])
+
                 }
-            })
-        }else{
-            ctx.reply(`<b>You must join our channel to use this bot</b>`, {
-                parse_mode: 'HTML',
-                reply_markup: {
-                    inline_keyboard: [
-                        [{ text: '🔰Join channel', url: `t.me/${process.env.CHANNEL_USERNAME}` }],
-                        [{ text: '✅Joined', callback_data: 'JOINCHECK' }]
-                    ]
-                }
-            })
+            } else {
+                //error message if searched data not available saving search query to requested list
+                ctx.reply(`❌Looks like the requested content is not available right now.<b>I have notified admins</b>`, { parse_mode: 'HTML' })
+                adminHelper.saveRequest(requestData)
+
+            }
+        } else {
+            ctx.reply(`❌Looks like the requested content is not available right now.<b>I have notified admins</b>`, { parse_mode: 'HTML' })
+            adminHelper.saveRequest(requestData)
         }
     })
     
@@ -364,6 +362,7 @@ bot.action('JOINCHECK', async (ctx) => {
             })
 
         } else {
+            joinedState = false
             ctx.reply(`<b>You must join our channel to use this bot</b>`, {
                 parse_mode: 'HTML',
                 reply_markup: {
@@ -466,13 +465,15 @@ bot.action('REQALL', async (ctx) => {
 
 // deploy to heroku 
 
-domain = `${process.env.DOMAIN}.herokuapp.com`
-bot.launch({
-    webhook:{
-       domain:domain,
-        port:Number(process.env.PORT)
+// domain = `${process.env.DOMAIN}.herokuapp.com`
+// bot.launch({
+//     webhook:{
+//        domain:domain,
+//         port:Number(process.env.PORT)
 
-    }
-})
+//     }
+// })
 
+
+bot.launch()
 

@@ -62,5 +62,10 @@ module.exports={
                 resolve(res)
             })
         })
+    },
+    delRequest:(query)=>{
+        db.get().collection(collection.REQUEST).deleteOne({inputQuery:query}).then((res)=>{
+            console.log(res);
+        })
     }
 }
