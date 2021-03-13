@@ -23,7 +23,7 @@ bot.start(async (ctx) => {
     let first_name = ctx.message.from.first_name
 
     //checking if user is a member of channel or not 
-   await bot.telegram.getChatMember(`@${process.env.CHANNEL_USERNAME}`, ctx.from.id).then((res) => {
+   bot.telegram.getChatMember(`@${process.env.CHANNEL_USERNAME}`, ctx.from.id).then((res) => {
         status = res.status
         console.log(status);
         if (status == 'left') {
