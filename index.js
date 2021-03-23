@@ -43,7 +43,7 @@ bot.start(async (ctx) => {
                 parse_mode: 'HTML',
                 reply_markup: {
                     inline_keyboard: [
-                        [{ text: '❤Share our channel', url: `https://t.me/share/url?url=https://t.me/${process.env.CHANNEL_USERNAME}` }]
+                        [{ text: '🔎Search',switch_inline_query:''}]
                     ]
                 }
 
@@ -163,16 +163,25 @@ bot.command('send', async (ctx) => {
 //getting file_id on sending document to bot
 
 bot.on('document', (ctx) => {
-    caption = ctx.message.caption //will use in next update to provide file with caption
     document = ctx.message.document
     file_id = document.file_id
-    file_name = document.file_name //will use for indexing in next update if possible
+
+    fileDetails ={
+        file_name:document.file_name,
+        file_id:document.file_id,
+        caption:ctx.message.caption,
+        file_size:document.file_size,
+        uniqueId:document.file_unique_id
+    }
 
     if (ctx.from.id == process.env.ADMIN) {
         ctx.reply(file_id)
+        adminHelper.saveFileInline(fileDetails)
     } else {
         ctx.reply('better send files to your personal chat')
     }
+
+
 })
 
 //saving file_id with search query to database -input format  /save file name,file_id1,file_id2
@@ -270,7 +279,7 @@ bot.command('help', (ctx) => {
                 inline_keyboard: [
                     [{ text: "▶ Next", callback_data: 'helpNext' }],
                     [{ text: "📊Statitics", callback_data: "helpStatitics" }],
-                    [{ text: '🔰Admin helper', url: 'https://telegra.ph/Filestoringbot-03-01' }]
+                    [{ text: '🔰Admin helper', url: 't.me/filestoringbot' }]
                 ]
             }
 
@@ -341,6 +350,35 @@ bot.on('message', async (ctx) => {
 
 
 
+})
+
+//inline search
+
+bot.on('inline_query',async(ctx)=>{
+    query = ctx.inlineQuery.query
+    if(query.length>0){
+        let searchResult = adminHelper.getfileInline(query).then((res)=>{
+            let result = res.map((item,index)=>{
+                return {
+                    type:'document',
+                    id:item._id,
+                    title:item.file_name,
+                    document_file_id:item.file_id,
+                    caption:item.caption,
+                    reply_markup:{
+                        inline_keyboard:[
+                            [{text:"🔎Search again",switch_inline_query:''}]
+                        ]
+                    }
+                }
+            })
+           
+            ctx.answerInlineQuery(result)
+        })
+    }else{
+        console.log('query not found');
+    }
+    
 })
 
 //callback datas 
@@ -465,14 +503,16 @@ bot.action('REQALL', async (ctx) => {
 
 // deploy to heroku 
 
-domain = `${process.env.DOMAIN}.herokuapp.com`
-bot.launch({
-    webhook:{
-       domain:domain,
-        port:Number(process.env.PORT)
+// domain = `${process.env.DOMAIN}.herokuapp.com`
+// bot.launch({
+//     webhook:{
+//        domain:domain,
+//         port:Number(process.env.PORT)
 
-    }
-})
+//     }
+// })
+
+bot.launch()
 
 
 

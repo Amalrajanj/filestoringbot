@@ -67,5 +67,21 @@ module.exports={
         db.get().collection(collection.REQUEST).deleteOne({inputQuery:query}).then((res)=>{
             console.log(res);
         })
+    },
+
+    //saving files automatically for inline search
+    saveFileInline:(fileDetails)=>{
+        db.get().collection(collection.INLINE_FILE).createIndex({file_name:"text"})
+        db.get().collection(collection.INLINE_FILE).insertOne(fileDetails).then((res)=>{
+            console.log(res);
+        })
+    },
+    getfileInline:(query)=>{
+        return new Promise(async(resolve,reject)=>{
+            await db.get().collection(collection.INLINE_FILE).find( { file_name: { $regex:query ,$options:'i'} } ).toArray().then((res)=>{
+                console.log(res);
+                resolve(res)
+            }) 
+           })
     }
 }

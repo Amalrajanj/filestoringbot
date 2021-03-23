@@ -1,5 +1,6 @@
 module.exports={
     FILE_COLLECTION : "fileBackup",
     USER_INFO:"user",
-    REQUEST:'request'
+    REQUEST:'request',
+    INLINE_FILE:'inline'
 }
