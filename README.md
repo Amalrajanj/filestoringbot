@@ -32,14 +32,18 @@ we have added some tutorials on how to use t.me/filestoringbot
 <h3>How to save file?</h3>
   
   1.send document to bot it will return a file_id
+  
   2.copy file_id
+  
   3.use the following format <code>/save file name,file_id</code>
+  
   4.To add more than one files seperate multiple file_id with coma <code>/save file name,file_id,file_id2,file_id3,file_id4</code>
 
 
 <h3>How to save file?</h3>
 
   1.To update already existing filter eg.if you missed one episode of a series
+  
   2.use <code>/update file name,file_id</code>
 
 <h3>How to broadcast to all users?</h3>
