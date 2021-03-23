@@ -51,4 +51,6 @@ we have added some tutorials on how to use t.me/filestoringbot
  <code>/send your message</code>
  
 
+<h2>HOW FILES GET SAVED?</h2>
 
+Files that are forwarded to bot will get saved for getting inline search result with caption ,manually saved files may not be having captions for now 
