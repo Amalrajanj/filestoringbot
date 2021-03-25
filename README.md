@@ -25,3 +25,32 @@ required details
 
 we have added some tutorials on how to use t.me/filestoringbot
 
+<h2>HOW TO USE?</h2
+  
+  ⚠ Let me warn you bot is bit old school you have to eveything manually
+  
+<h3>How to save file?</h3>
+  
+  1.send document to bot it will return a file_id
+  
+  2.copy file_id
+  
+  3.use the following format <code>/save file name,file_id</code>
+  
+  4.To add more than one files seperate multiple file_id with coma <code>/save file name,file_id,file_id2,file_id3,file_id4</code>
+
+
+<h3>How to save file?</h3>
+
+  1.To update already existing filter eg.if you missed one episode of a series
+  
+  2.use <code>/update file name,file_id</code>
+
+<h3>How to broadcast to all users?</h3>
+ 
+ <code>/send your message</code>
+ 
+
+<h2>HOW FILES GET SAVED?</h2>
+
+Files that are forwarded to bot will get saved for getting inline search result with caption ,manually saved files may not be having captions for now 
