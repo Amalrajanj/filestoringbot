@@ -1,5 +1,6 @@
 const db = require('../config/connecton')
 const collection = require('../config/collection')
+var objectId = require('mongodb').ObjectID
 
 module.exports={
     //saving user id for broadcasting
@@ -64,8 +65,10 @@ module.exports={
         })
     },
     delRequest:(query)=>{
-        db.get().collection(collection.REQUEST).deleteOne({inputQuery:query}).then((res)=>{
-            console.log(res);
+        return new Promise((resolve,reject)=>{
+            db.get().collection(collection.REQUEST).deleteOne({inputQuery:query}).then((res)=>{
+                resolve(res)
+            })
         })
     },
 

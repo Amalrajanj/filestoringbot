@@ -13,6 +13,7 @@
     "dotenv": "^8.2.0",
     "mongodb": "^3.6.4",
     "nodemon": "^2.0.7",
-    "telegraf": "^4.1.1"
+    "telegraf": "^4.1.1",
+    "telegraf-stateless-question": "^2.0.0"
   }
 }

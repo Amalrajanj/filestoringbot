@@ -1,5 +1,6 @@
 require('dotenv').config()
 const { Telegraf, Markup } = require('telegraf')
+const TelegrafStatelessQuestion = require('telegraf-stateless-question');
 const bot = new Telegraf(process.env.TOKEN)
 
 const db = require('./config/connecton')
@@ -62,20 +63,37 @@ bot.start(async (ctx) => {
 
     //checking if admin and providing admin keyboard to manage requests,help etc
     if (ctx.from.id == process.env.ADMIN) {
-        return await ctx.reply('hi admin', Markup.keyboard(
+        return await ctx.reply('❤Hello my Admin', Markup.keyboard(
             [
                 ['🤖Bot statics'],
                 ['🔰Help'],
-                ['❕Requestes']
+                ['❕Requestes'],
+                ['💌Broadcast user']
             ]
         )
             .oneTime()
             .resize()
         )
+    }else{
+        return await ctx.reply('HI',Markup.keyboard(
+            [
+                ['📖Help','♻Share'],
+                ['📥Request']
+            ]
+        )
+        .oneTime()
+        .resize()
+        )
+        
     }
 })
 
+
+//==============================================================================================================//
+
 //defining admin buttons
+
+
 bot.hears('🤖Bot statics', async (ctx) => {
     let users = await adminHelper.getUser().then((res) => {
         if (ctx.from.id == process.env.ADMIN) {
@@ -86,11 +104,13 @@ bot.hears('🤖Bot statics', async (ctx) => {
     })
 })
 bot.hears('🔰Help', (ctx) => {
+    ctx.deleteMessage()
     if (ctx.from.id == process.env.ADMIN) {
         ctx.reply('we will soon add tutorials and documentations check @filestoringbot')
     }
 })
 bot.hears('❕Requestes', async (ctx) => {
+    ctx.deleteMessage()
     if (ctx.from.id == process.env.ADMIN) {
         let req = await adminHelper.getRequest().then((res) => {
             console.log(res);
@@ -119,7 +139,159 @@ bot.hears('❕Requestes', async (ctx) => {
     }
 })
 
+//getting requested keyword to remove
 
+const ReqQuestion = new TelegrafStatelessQuestion('request',async ctx => {
+	console.log('user broadcasting')
+	text =ctx.message.text
+    if(text.length >0){
+       await adminHelper.delRequest(text).then(async(res)=>{
+           
+            if (ctx.from.id == process.env.ADMIN) {
+                return await ctx.reply('✅Removed succesfully ', Markup.keyboard(
+                    [
+                        ['🤖Bot statics'],
+                        ['🔰Help'],
+                        ['❕Requestes'],
+                        ['💌Broadcast user']
+                    ]
+                )
+                    .oneTime()
+                    .resize()
+                )
+            }
+            
+        })
+    }else{
+        ctx.reply('🚫Enter a valid text')
+    }
+        
+})
+bot.use(ReqQuestion.middleware())
+
+bot.action('REQONE',async(ctx)=>{
+    text = '⚠ Copy paste the exact keyword from request list to remove from list'
+    return ReqQuestion.replyWithMarkdown(ctx,text)
+})
+
+//getting broadcast message
+
+const broadCastQuestion = new TelegrafStatelessQuestion('broadcast',async ctx => {
+	console.log('user broadcasting')
+	text =ctx.message.text
+	
+	if(ctx.message.text.length >0){
+        let userData = await adminHelper.getUser().then(async(res) => {
+
+            let userId = []
+            n = res.length
+            for (i = 0; i < n; i++) {
+                userId.push(res[i].userId)
+            }
+            //broadcasting message and getting number of sucesfull broadcast
+            failedCount = []
+            async function broadcast(text) {
+                for (users of userId) {
+                    try {
+                        await bot.telegram.sendMessage(users, String(text))
+                    } catch (error) {
+                        failedCount.push(users)
+                    }
+                }
+               // ctx.reply(`📊Total users started bot: <b>${n}</b>\n🛑failed users -<b>${failedCount.length}</b>\n🎉Active users:<b>${n - failedCount.length}</b>`, { parse_mode: 'HTML' })
+                return await ctx.replyWithMarkdown(`📊Total users started bot: *${n}*\n🛑failed users -*${failedCount.length}*\n🎉Active users:*${n - failedCount.length}*`, Markup.keyboard(
+                    [
+                        ['🤖Bot statics'],
+                        ['🔰Help'],
+                        ['❕Requestes'],
+                        ['💌Broadcast user']
+                    ]
+                )
+                    .oneTime()
+                    .resize()
+                )
+            }
+    
+            if (ctx.from.id == process.env.ADMIN) {
+                broadcast(text)
+            } else {
+                ctx.reply('you dont have the permission')
+            }
+    
+        })
+	}else{
+		ctx.reply('‼ Enter a valid text')
+	}
+})
+
+// Dont forget to use the middleware
+bot.use(broadCastQuestion.middleware())
+
+bot.hears('💌Broadcast user',(ctx)=>{
+    let text = 'Enter message to be brodcasted(only text supported)'
+    return broadCastQuestion.replyWithMarkdown(ctx,text)
+
+})
+
+//==============================================================================================================//
+
+//defining user buttons 
+
+bot.hears('📖Help',(ctx)=>{
+    ctx.reply(`<b>🔍 NORMAL SEARCH</b>\n\n<i>Simply type your search keyword if its available bot will fetch files for you.Files may not have caption we will fix it soon</i>`,{
+        parse_mode:'HTML',
+        reply_markup:{
+            inline_keyboard:[
+                [{ text: "▶ Next", callback_data: 'helpNext'}],
+                [{text:'🎲Clone',url:'t.me/filestoringbot'}]
+            ]
+        }
+    })
+})
+
+bot.hears('♻Share',(ctx)=>{
+    ctx.deleteMessage()
+    ctx.reply(`❤ Hi <b>${ctx.from.first_name}</b> thanks for helping us.Click share button below and share our channel as a token of support`,{
+        parse_mode:'HTML',
+        reply_markup:{
+            inline_keyboard:[
+                [{text:'🧡SHARE',url:`https://t.me/share/url?url=https://t.me/${process.env.CHANNEL_USERNAME}`}]
+            ]
+        }
+    })
+})
+
+const Req = new TelegrafStatelessQuestion('requesting',async ctx => {
+	console.log('req')
+    text =ctx.message.text
+    reqData={
+        inputQuery:text
+    }
+	
+    if(ctx.message.via_bot){
+        adminHelper.saveRequest(reqData)
+        ctx.deleteMessage()
+            return await ctx.reply(`🔖Saved to pending requests check our channel for updates`,Markup.keyboard(
+                [
+                    ['📖Help','♻Share'],
+                    ['📥Request']
+                ]
+            )
+            .oneTime()
+            .resize()
+            )
+    }else{
+        ctx.deleteMessage()
+        ctx.replyWithMarkdown(`❌Failed request try again\n use *@imdb* inline and enter query`)
+    }
+        
+})
+bot.use(Req.middleware())
+
+bot.hears('📥Request',(ctx)=>{
+    text = `🎉 use *@imdb* inline and enter query`
+    return Req.replyWithMarkdown(ctx,text)
+})
 
 
 //broadcasting message
@@ -178,7 +350,7 @@ bot.on('document', (ctx) => {
         ctx.reply(file_id)
         adminHelper.saveFileInline(fileDetails)
     } else {
-        ctx.reply('better send files to your personal chat')
+        ctx.reply('🚫better send files to your personal chat')
     }
 
 
@@ -272,46 +444,19 @@ bot.command('list', async (ctx) => {
 //help 
 
 bot.command('help', (ctx) => {
-    if (ctx.from.id == process.env.ADMIN) {
-        ctx.reply('🔎<b>Simply type your movie/series name</b>(make sure the spelling is same as imdb)\n\nCheck /list for available contents', {
-            parse_mode: "HTML",
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: "▶ Next", callback_data: 'helpNext' }],
-                    [{ text: "📊Statitics", callback_data: "helpStatitics" }],
-                    [{ text: '🔰Admin helper', url: 't.me/filestoringbot' }]
-                ]
-            }
-
-        })
-    } else {
-        ctx.reply('🔎<b>Simply type your movie/series name</b>(make sure the spelling is same as imdb)\n\nCheck /list for available contents', {
-            parse_mode: "HTML",
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: "▶ Next", callback_data: 'helpNext' }],
-                    [{ text: "📊Statitics", callback_data: "helpStatitics" }, { text: "🎲Clone", callback_data: 'helpClone' }]
-                ]
-            }
-
-        })
-    }
+    ctx.reply(`<b>🔍NORMAL SEARCH</b>\n\n<b>Simply type your search keyword if its available bot will fetch files for you.Files may not have caption we will fix it soon</b>`,{
+        parse_mode:'HTML',
+        reply_markup:{
+            inline_keyboard:[
+                [{ text: "▶ Next", callback_data: 'helpNext'}],
+                [{text:'🎲Clone',url:'t.me/filestoringbot'}]
+            ]
+        }
+    })
 })
 
-//getting list of requested content from database
 
-bot.command('req', async (ctx) => {
-    msg = ctx.message.text
-    let msgArray = msg.split(' ')
-    msgArray.shift()
-    let query = msgArray.join(' ')
-    query.toLowerCase()
-    console.log(query);
-    if(ctx.from.id == process.env.ADMIN){
-        adminHelper.delRequest(query)
-            ctx.reply('⭕removed')
-    }
-})
+
 
 //checking search query and taking file_id from database and sending document with file_id
 
@@ -337,12 +482,15 @@ bot.on('message', async (ctx) => {
             } else {
                 //error message if searched data not available saving search query to requested list
                 ctx.reply(`❌Looks like the requested content is not available right now.<b>I have notified admins</b>`, { parse_mode: 'HTML' })
-                adminHelper.saveRequest(requestData)
+                bot.telegram.sendMessage(process.env.LOG_GROUP, `🛑Failed search\n<b>Keyword:</b><code>${query}</code>\n<b>First name:</b><code>${ctx.from.first_name}</code>\n<b>UserId:</b><code>${ctx.from.id}</code>`, { parse_mode: 'HTML' })
+                
 
             }
         } else {
             ctx.reply(`❌Looks like the requested content is not available right now.<b>I have notified admins</b>`, { parse_mode: 'HTML' })
-            adminHelper.saveRequest(requestData)
+            bot.telegram.sendMessage(process.env.LOG_GROUP, `🛑Failed search\n<b>Keyword:</b><code>${query}</code>\n<b>First name:</b><code>${ctx.from.first_name}</code>\n<b>UserId:</b><code>${ctx.from.id}</code>`, { parse_mode: 'HTML' })
+
+            
         }
     })
     
@@ -381,6 +529,9 @@ bot.on('inline_query',async(ctx)=>{
     
 })
 
+//==============================================================================================================//
+//==============================================================================================================//
+
 //callback datas 
 
 bot.action('JOINCHECK', async (ctx) => {
@@ -417,12 +568,12 @@ bot.action('JOINCHECK', async (ctx) => {
 
 bot.action('helpNext', (ctx) => {
     ctx.deleteMessage()
-    ctx.reply('👁‍🗨 We are trying to provide contents for free.Sometimes we run out of fund for maintaining channel you can consider donating\n\n\n 🔰<b>If you are a channel admin free feel to promote us and feel free to take our contents</b>', {
+    ctx.reply('<b>🔰INLINE SEARCH</b>\n\n<i>Click 🔎Search button and use me inline in your personal chat.Files will be having caption and efficient search result</i>', {
         parse_mode: "HTML",
         reply_markup: {
             inline_keyboard: [
                 [{ text: "◀ Back", callback_data: 'helpBack' }],
-                [{ text: "📊Statitics", callback_data: "helpStatitics" }, { text: "🎲Clone", callback_data: 'helpClone' }]
+                [{ text: '🔎Search', switch_inline_query: "" }]
             ]
         }
 
@@ -430,89 +581,36 @@ bot.action('helpNext', (ctx) => {
 })
 bot.action('helpBack', (ctx) => {
     ctx.deleteMessage()
-    ctx.reply('🔎<b>Simply type your movie/series name</b>(make sure the spelling is same as imdb)\n\nCheck /list for available contents', {
-        parse_mode: "HTML",
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: "▶ Next", callback_data: 'helpNext' }],
-                [{ text: "📊Statitics", callback_data: "helpStatitics" }, { text: "🎲Clone", callback_data: 'helpClone' }]
-            ]
-        }
-
-    })
-})
-
-bot.action('helpClone', (ctx) => {
-    ctx.deleteMessage()
-    ctx.reply('bot is not pretty as it seems from outside ,you have to manually add files for now, we will update code soon if you still think you need your own version of this bot im happy to help set up one for you(its free for now)\ncontact @Reportnetflixbot', {
-        parse_mode: "HTML",
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: 'Back', callback_data: 'helpBack' }]
+    ctx.reply(`<b>🔍NORMAL SEARCH</b>\n\n<i>Simply type your search keyword if its available bot will fetch files for you.Files may not have caption we will fix it soon</i>`,{
+        parse_mode:'HTML',
+        reply_markup:{
+            inline_keyboard:[
+                [{ text: "▶ Next", callback_data: 'helpNext'}],
+                [{text:'🎲Clone',url:'t.me/filestoringbot'}]
             ]
         }
     })
 })
 
-bot.action('helpStatitics', (ctx) => {
-    ctx.deleteMessage()
-    ctx.reply('you are not authorized to view statistics,soon we will make it public', {
-        parse_mode: "HTML",
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: 'Back', callback_data: 'helpBack' }]
-            ]
-        }
-    })
-})
-
-bot.action('adminHelp', (ctx) => {
-    ctx.deleteMessage()
-    ctx.reply(`i,`, {
-        parse_mode: 'HTML',
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: '◀Back', callback_data: 'adminHelpMenu' }]
-            ]
-        }
-
-    })
-})
-bot.action('adminHelpMenu', (ctx) => {
-    ctx.deleteMessage()
-    ctx.reply('🔎<b>Simply type your movie/series name</b>(make sure the spelling is same as imdb)\n\nCheck /list for available contents', {
-        parse_mode: "HTML",
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: "▶ Next", callback_data: 'helpNext' }],
-                [{ text: "📊Statitics", callback_data: "helpStatitics" }],
-                [{ text: '🔰Admin helper', callback_data: 'adminHelp' }]
-            ]
-        }
-
-    })
-})
-bot.action('REQONE', (ctx) => {
-    ctx.deleteMessage()
-    ctx.reply(`you have to remove individual requests for now we will soon make it easy for you,use \n\n<b>/req keyword</b>`, { parse_mode: 'HTML' })
-})
 bot.action('REQALL', async (ctx) => {
     ctx.deleteMessage()
     await db.get().collection(collection.REQUEST).drop()
 })
 
+
 // deploy to heroku 
 
-// domain = `${process.env.DOMAIN}.herokuapp.com`
-// bot.launch({
-//     webhook:{
-//        domain:domain,
-//         port:Number(process.env.PORT)
+domain = `${process.env.DOMAIN}.herokuapp.com`
+bot.launch({
+    webhook:{
+       domain:domain,
+        port:Number(process.env.PORT)
 
-//     }
-// })
+    }
+})
 
-bot.launch()
+
+
 
 
 
