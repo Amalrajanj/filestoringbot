@@ -65,9 +65,8 @@ bot.start(async (ctx) => {
     if (ctx.from.id == process.env.ADMIN) {
         return await ctx.reply('❤Hello my Admin', Markup.keyboard(
             [
-                ['🤖Bot statics'],
-                ['🔰Help'],
-                ['❕Requestes'],
+                ['🤖Bot statics','🔰Help'],
+                ['❕Requests'],
                 ['💌Broadcast user']
             ]
         )
@@ -78,7 +77,8 @@ bot.start(async (ctx) => {
         return await ctx.reply('HI',Markup.keyboard(
             [
                 ['📖Help','♻Share'],
-                ['📥Request']
+                ['📥Request'],
+                ['🧾List']
             ]
         )
         .oneTime()
@@ -109,7 +109,7 @@ bot.hears('🔰Help', (ctx) => {
         ctx.reply('we will soon add tutorials and documentations check @filestoringbot')
     }
 })
-bot.hears('❕Requestes', async (ctx) => {
+bot.hears('❕Requests', async (ctx) => {
     ctx.deleteMessage()
     if (ctx.from.id == process.env.ADMIN) {
         let req = await adminHelper.getRequest().then((res) => {
@@ -150,9 +150,8 @@ const ReqQuestion = new TelegrafStatelessQuestion('request',async ctx => {
             if (ctx.from.id == process.env.ADMIN) {
                 return await ctx.reply('✅Removed succesfully ', Markup.keyboard(
                     [
-                        ['🤖Bot statics'],
-                        ['🔰Help'],
-                        ['❕Requestes'],
+                        ['🤖Bot statics','🔰Help'],
+                        ['❕Requests'],
                         ['💌Broadcast user']
                     ]
                 )
@@ -176,7 +175,7 @@ bot.action('REQONE',async(ctx)=>{
 
 //getting broadcast message
 
-const broadCastQuestion = new TelegrafStatelessQuestion('broadcast',async ctx => {
+const broadCastQuestion = new TelegrafStatelessQuestion('broadcastuser',async ctx => {
 	console.log('user broadcasting')
 	text =ctx.message.text
 	
@@ -201,9 +200,8 @@ const broadCastQuestion = new TelegrafStatelessQuestion('broadcast',async ctx =>
                // ctx.reply(`📊Total users started bot: <b>${n}</b>\n🛑failed users -<b>${failedCount.length}</b>\n🎉Active users:<b>${n - failedCount.length}</b>`, { parse_mode: 'HTML' })
                 return await ctx.replyWithMarkdown(`📊Total users started bot: *${n}*\n🛑failed users -*${failedCount.length}*\n🎉Active users:*${n - failedCount.length}*`, Markup.keyboard(
                     [
-                        ['🤖Bot statics'],
-                        ['🔰Help'],
-                        ['❕Requestes'],
+                        ['🤖Bot statics','🔰Help'],
+                        ['❕Requests'],
                         ['💌Broadcast user']
                     ]
                 )
@@ -274,7 +272,8 @@ const Req = new TelegrafStatelessQuestion('requesting',async ctx => {
             return await ctx.reply(`🔖Saved to pending requests check our channel for updates`,Markup.keyboard(
                 [
                     ['📖Help','♻Share'],
-                    ['📥Request']
+                    ['📥Request'],
+                    ['🧾List']
                 ]
             )
             .oneTime()
@@ -291,6 +290,23 @@ bot.use(Req.middleware())
 bot.hears('📥Request',(ctx)=>{
     text = `🎉 use *@imdb* inline and enter query`
     return Req.replyWithMarkdown(ctx,text)
+})
+
+bot.hears('🧾List',(ctx)=>{
+    saveData = adminHelper.getList().then((res) => {
+        let n = res.length
+        list = []
+        for (i = 0; i < n; i++) {
+            list.push(res[i].searchQuery)
+        }
+        let outputList = list.map((item, index) => {
+            return `<code>${item}</code>`
+        })
+        let resultList = outputList.join('\n\n')
+        ctx.reply(resultList, {
+            parse_mode: 'HTML'
+        })
+    })
 })
 
 
