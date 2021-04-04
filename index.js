@@ -351,6 +351,7 @@ bot.command('send', async (ctx) => {
 //getting file_id on sending document to bot
 
 bot.on('document', (ctx) => {
+    console.log(ctx);
     document = ctx.message.document
     file_id = document.file_id
 
@@ -523,10 +524,12 @@ bot.on('inline_query',async(ctx)=>{
     if(query.length>0){
         let searchResult = adminHelper.getfileInline(query).then((res)=>{
             let result = res.map((item,index)=>{
+                fileSize = item.file_size * 9.5367E-07
                 return {
                     type:'document',
                     id:item._id,
                     title:item.file_name,
+                    description:`size:${fileSize}MiB`,
                     document_file_id:item.file_id,
                     caption:item.caption,
                     reply_markup:{
@@ -624,6 +627,8 @@ bot.launch({
 
     }
 })
+
+
 
 
 
