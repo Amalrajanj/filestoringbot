@@ -351,10 +351,8 @@ bot.command('send', async (ctx) => {
 //getting file_id on sending document to bot
 
 bot.on('document', (ctx) => {
-    console.log(ctx);
     document = ctx.message.document
     file_id = document.file_id
-
     fileDetails ={
         file_name:document.file_name,
         file_id:document.file_id,
@@ -371,6 +369,25 @@ bot.on('document', (ctx) => {
     }
 
 
+})
+
+bot.on('audio',(ctx)=>{
+    console.log(ctx.message.audio);
+    audio = ctx.message.audio
+    fileDetails ={
+        file_name:audio.file_name,
+        file_id:audio.file_id,
+        caption:ctx.message.caption,
+        file_size:audio.file_size,
+        uniqueId:audio.file_unique_id
+    }
+
+    if (ctx.from.id == process.env.ADMIN) {
+        ctx.reply(audio.file_id)
+        adminHelper.saveFileInline(fileDetails)
+    } else {
+        ctx.reply('🚫better send files to your personal chat')
+    }
 })
 
 //saving file_id with search query to database -input format  /save file name,file_id1,file_id2
@@ -627,12 +644,5 @@ bot.launch({
 
     }
 })
-
-
-
-
-
-
-
 
 
