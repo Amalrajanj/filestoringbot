@@ -29,7 +29,7 @@ bot.start(async (ctx) => {
         console.log(status);
         if (status == 'left') {
             joinedState = false
-            ctx.reply(`<b>You must join our channel to use this bot</b>`, {
+            ctx.reply(`<b>Join Channel dulu kak agar botnya bekerja</b>`, {
                 parse_mode: 'HTML',
                 reply_markup: {
                     inline_keyboard: [
